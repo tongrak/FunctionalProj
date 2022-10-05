@@ -1,12 +1,11 @@
 module Tokenizer (
     tokenize,
-    tokeToStr,
-    tokeIsNum,
+    tokensToStr,
     Token,
     Tokens
 ) where
 
-    import Data.Char
+    import Data.Char (isSpace)
 
     type Token = [Char]
     type Tokens = [Token]
@@ -23,10 +22,6 @@ module Tokenizer (
             addCLats (x:xs) = (inA:x):xs
             addCLats [] = [[inA]]
 
-    tokeToStr:: Tokens -> String
-    tokeToStr tokens = foldl1 (++) tokens
+    tokensToStr:: Tokens -> String
+    tokensToStr tokens = foldl1 (++) tokens
 
-    tokeIsNum:: Token -> Bool
-    tokeIsNum []  = False
-    tokeIsNum tok = foldl aux True tok
-        where aux acc x = if isDigit x then acc && True else False
