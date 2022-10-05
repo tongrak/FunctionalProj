@@ -1,18 +1,9 @@
 module CommPhaser (
-    commPhase
+    commPhase, Comm, ManComm, QueComm
 ) where
 
-    import PtInTime
-    import Tokenizer
-
-    type Reminder = (PtOnClock, PtOnClen)
-    type DueDate = PtOnClen
-    type Tags = [[Char]]
-    type Desc = String
-    type Marked = Bool
-
-    type Task = (Marked, Tags, Desc, (Maybe DueDate), (Maybe Reminder)) 
-    type ParTask = ((Maybe Marked), Tags, (Maybe Desc), (Maybe DueDate), (Maybe Reminder))
+    import Tokenizer as Tk
+    import TaskModel
 
     data Comm = Manipulate ManComm | Query QueComm| NotComm
         deriving (Show)
@@ -20,10 +11,6 @@ module CommPhaser (
         deriving (Show)
     data QueComm = ShComm ParTask 
         deriving (Show)
-
-    -- toLowerStr:: String -> String
-    -- toLowerStr [] = []
-    -- toLowerStr (x:xs) = toLower x:toLowerStr xs
 
     commPhase:: Tokens -> Comm
     commPhase [] = NotComm
@@ -39,13 +26,13 @@ module CommPhaser (
         tags = tagFinder tokens
         maybDue = dueDateFinder tokens
         maybRemi = reminFinder tokens
-        desc = tokeToStr tokens
+        desc = Tk.tokensToStr tokens
         in (Manipulate(CrComm (False, tags, desc, maybDue, maybRemi)))
     
-    tagFinder:: Tokens -> Tags
+    tagFinder:: Tokens -> [String]
     tagFinder tokens = foldl tagFinderAux [] tokens
 
-    tagFinderAux::Tags -> Token ->Tags
+    tagFinderAux::[String] -> Token ->[String]
     tagFinderAux acc (x:xs) = if x == '#' then xs:acc else acc
     tagFinderAux acc [] = acc
 
