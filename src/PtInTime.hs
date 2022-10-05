@@ -1,26 +1,31 @@
 module PtInTime (
-    Min, Hou,
-    Days, Date, Month, Year,
     PtOnClen, PtOnClock
 ) where
 
-    import Tokenizer
+    import Data.Time (TimeOfDay, DayOfWeek, toGregorian)
+    -- import Data.Time.Calendar (MonthOfYear, Year)
+    -- import Tokenizer
 
     type Min = Int
     type Hou = Int
 
-    -- daysStr = ["Monday", "Tueday", "Wednesday", ]
-
-    data Days = Mon | Tue | Wed | Thu | Fri | Sat | Sun
-        deriving (Show)
-    type Date = Int
-    data Month = Jan | Feb | Apl | May | Jun | Aug | Sep | Oct | Nov | Dec
-        deriving (Show)
-    type Year = Int
-
     type PtOnClock = (Hou, Min)
-    type PtOnClen  = (Date, Month, Year)
 
-    -- TokesToPtClk:: Tokens -> PtPtOnClock
-    -- TokesToPtClk (x:xs)
-    --         | 
+    type Date = Int
+    type MonthNum = Int
+    type YearNum = Int
+
+    type PtOnClen  = (Date, MonthNum, YearNum)
+
+    -- TODO:
+    -- clkPhase:: String -> Maybe PtOnClock 
+        --  "10 am" -> (10,0)
+        --  "1430" -> (14,30)
+
+    -- clenPhase:: String -> Maybe PtOnClen
+        --  "Mon" -> //Monday in current DayOfWeek
+        --  "10 May" -> (10, 5, //Current Year)
+
+    -- nextPtOnClen:: PtOnClen -> PtOnClen
+        --  (24,9,2022) -> (31,10,2022)
+        --  (28,10,2022) -> (4,11,2022)
