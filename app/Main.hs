@@ -1,28 +1,36 @@
 module Main (main) where
 
-import Lib
+-- import Lib
 import Tokenizer
 import CommPhaser
 
 main :: IO ()
-main = someFunc
+main = do oneCommRunner
 
 oneCommRunner:: IO ()
 oneCommRunner = do
     line <- printNGet "insert command >"
-    let (x:xs) = tokenize line
+    let tokens@(x:_) = tokenize line
     if x == "exit"
-        then return ()
-        else do -- run 
-            putStr "Tokens>"
-            print (x:xs)
-            let comm = commPhase (x:xs)
-            print comm
-            -- actOnComm comm
-            return ()
+    then return ()
+    else do -- run 
+        putStr "Tokens>"
+        print tokens
+        let pcomm = commParse tokens
+        case pcomm of
+            Left m -> do
+                putStrLn m
+                oneCommRunner
+            Right _ -> do
+                putStrLn "Command recived"
+                return ()
 
 printNGet::String -> IO String
 printNGet msg = do
     putStr msg
     line <- getLine
-    return line
+    if line == []
+    then do
+        putStr "no input detected"
+        printNGet msg
+    else return line
