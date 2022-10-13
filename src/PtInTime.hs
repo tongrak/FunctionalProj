@@ -1,10 +1,11 @@
 module PtInTime (
-    PtOnClen, PtOnClock
+    PtOnClen, PtOnClock, dNrParse
 ) where
 
     import Data.Time (TimeOfDay, DayOfWeek, toGregorian)
     -- import Data.Time.Calendar (MonthOfYear, Year)
-    -- import Tokenizer
+    import Tokenizer
+    import TaskModel
 
     type Min = Int
     type Hou = Int
@@ -17,6 +18,9 @@ module PtInTime (
 
     type PtOnClen  = (Date, MonthNum, YearNum)
 
+    dNrParse::Tokens -> DnRobj
+    dNrParse _ = (0,0,0)
+
     -- TODO:
     -- clkPhase:: String -> Maybe PtOnClock 
         --  "10 am" -> (10,0)
@@ -26,6 +30,7 @@ module PtInTime (
         --  "Mon" -> //Monday in current DayOfWeek
         --  "10 May" -> (10, 5, //Current Year)
 
+    -- !! Will not work as intended.
     -- nextPtOnClen:: PtOnClen -> PtOnClen
-        --  (24,9,2022) -> (31,10,2022)
+        --  (24,9,2022) -> (31,9,2022)
         --  (28,10,2022) -> (4,11,2022)
