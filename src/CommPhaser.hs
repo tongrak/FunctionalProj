@@ -44,11 +44,10 @@ module CommPhaser (
               aux acc (x:xs) = if x == ";" then Just (acc++[x],xs) else aux (acc++[x]) xs
 
     dueNReParse:: Tokens -> Either String (Either DnRobj (DnRobj,DnRobj))
-    dueNReParse _ = Left "Temp"
-    -- dueNReParse ts = let
-    --     ei = case (semiColonD ts) of
-    --             Nothing -> 
-    --             Just (lf, rt) -> (dNrParse lf,)
+    dueNReParse ts = let
+        ei = case (semiColonD ts) of
+                Nothing -> dNrParse ts
+                Just (lf, rt) -> (dNrParse lf, dNrParse rt)
 
     editCommParse:: Tokens -> Either String Comm
     editCommParse _ = Left "Temp"
@@ -59,16 +58,5 @@ module CommPhaser (
     showCommParse:: Tokens -> Either String Comm
     showCommParse _ = Left "Temp"
 
-    
-    -- tagFinder:: Tokens -> [String]
-    -- tagFinder tokens = foldl tagFinderAux [] tokens
-
-    -- tagFinderAux::[String] -> Token ->[String]
-    -- tagFinderAux acc (x:xs) = if x == '#' then xs:acc else acc
-    -- tagFinderAux acc [] = acc
-
-    dueDateFinder x = Nothing
-
-    reminFinder x = Nothing
 
     
