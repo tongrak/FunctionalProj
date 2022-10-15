@@ -38,16 +38,21 @@ module CommPhaser (
             Right (o1,o2) -> taskfrom2Dnr des o1 o2
         in Manipulate( CrComm (task))
 
-    semiColonD:: Tokens -> Maybe (Tokens, Tokens)
-    semiColonD ts = aux [] ts
-        where aux _ [] = Nothing
-              aux acc (x:xs) = if x == ";" then Just (acc++[x],xs) else aux (acc++[x]) xs
-
     dueNReParse:: Tokens -> Either String (Either DnRobj (DnRobj,DnRobj))
     dueNReParse ts = let
         ei = case (semiColonD ts) of
-                Nothing -> dNrParse ts
-                Just (lf, rt) -> (dNrParse lf, dNrParse rt)
+                Nothing -> case dNrParse ts of
+                    Left ms -> Left ms
+                    Right dr -> Right (Left dr)
+                Just (lf, rt) -> case biCheck of
+                    Left ms -> Left ms
+                    Right (lff, rtt) -> Right (Right (lff, rtt))
+                    where biCheck = case (dNrParse lf, dNrParse rt) of
+                        (Left mss, _) -> Left mss
+                        (_, Left msx) -> Left msx
+                        (Right a, Right b) -> Right(a, b)
+                    
+                    
 
     editCommParse:: Tokens -> Either String Comm
     editCommParse _ = Left "Temp"
