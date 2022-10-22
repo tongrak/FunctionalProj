@@ -1,8 +1,8 @@
 module AuxFunc (
     toLowerStr,
     strIsNum,
-    semiColonD,
-    stringD
+    splitTsSemi,
+    splitTWith
 ) where
 
     import Data.Char (toLower, isDigit)
@@ -16,10 +16,19 @@ module AuxFunc (
     strIsNum tok = foldl aux True tok
         where aux acc x = if isDigit x then acc && True else False
 
-    semiColonD:: Tokens -> Maybe (Tokens, Tokens)
-    semiColonD ts = stringD ";" ts
+    -- strToNum:: String -> Maybe Int
+    -- strToNum [] = Nothing
+    -- strToNum x = 
 
-    stringD:: String -> Tokens -> Maybe (Tokens, Tokens)
-    stringD strD ts = aux [] ts
+    splitTsSemi:: Tokens -> Maybe (Tokens, Tokens)
+    splitTsSemi ts = splitTsWith ";" ts
+
+    splitTsWith:: String -> Tokens -> Maybe (Tokens, Tokens)
+    splitTsWith strD ts = aux [] ts
         where aux _ [] = Nothing
-              aux acc (x:xs) = if x == strD then Just (acc++[x],xs) else aux (acc++[x]) xs
+              aux acc (x:xs) = if x == strD then Just (acc,xs) else aux (acc++[x]) xs
+
+    splitTWith:: Char -> Token -> Maybe (Token, Token)
+    splitTWith key t = aux [] t
+        where aux _ [] = Nothing
+              aux acc (x:xs) = if x == key then Just (acc,xs) else aux (acc++[x]) xs
