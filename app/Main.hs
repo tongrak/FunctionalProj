@@ -19,10 +19,12 @@ oneCommRunner = do
         let pcomm = commParse tokens
         case pcomm of
             Left m -> do
+                putStr "Error Dectected>"
                 putStrLn m
                 oneCommRunner
-            Right _ -> do
-                putStrLn "Command recived"
+            Right c -> do
+                putStr "Command recived>"
+                print c
                 return ()
 
 printNGet::String -> IO String
