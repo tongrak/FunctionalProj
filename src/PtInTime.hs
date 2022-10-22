@@ -1,61 +1,39 @@
 module PtInTime (
-    PtOnClen, PtOnClock, dNrParse
+    dNrParse
 ) where
 
-    import Data.Time (TimeOfDay, DayOfWeek, toGregorian)
-    -- import Data.Time.Calendar (MonthOfYear, Year)
     import Tokenizer
     import TaskModel
     import AuxFunc
 
-    type Min = Int
-    type Hou = Int
-
-    type PtOnClock = (Hou, Min)
-
-    type Date = Int
-    type MonthNum = Int
-    type YearNum = Int
-
-    type PtOnClen  = (Date, MonthNum, YearNum)
-
     dNrParse::Tokens -> Either String DnRobj
     dNrParse [] = Left "dNrParse: Empty Tokens"
     dNrParse (x:xs)
-        | x == "BY" = Left $ dueDParse xs
-        | x == "REMIND" = Right $ 
+        | x == "BY" = dueDParse $ tokensToStr xs
+        | x == "REMIND" = reminDParse $ tokensToStr xs
         | otherwise = Left "Unknown Point In Time"
 
-    dueDParse::Tokens -> Either String PtOnClen
-    dueDParse [] = Left "dueDParse: Empty Tokens"
-    dueDParse ts = case stringD ":" ts of
-        Nothing -> Right dayOfWeekP (tokensToStr ts)
-        Just (fh, lh) -> Right (tkToNum fh, tkToNum lh, 2022)
-        where tkToNum = strIsNum . tokensToStr
+    dueDParse::Token -> Either String DnRobj
+    dueDParse ts = case rawDueDParse ts of
+        Left ms -> Left ms
+        Right dd -> Right $ Left dd
 
-    dayOfWeekP:: String -> PtOnClen
-    dayOfWeekP _ = (1,1,1)
+    rawDueDParse::Token -> Either String DueDate
+    rawDueDParse [] = Left "dueDParse: Empty Tokens"
+    rawDueDParse ts = case splitTWith ':' ts of
+        Nothing -> Left "dueDParse: DayOfWeek out of order"
+        Just (f,t) -> Right (f,filter aux  t)
+        where aux c = c /= ';' && c /= ' '
 
-    -- ptOnClenP::
+    -- dayOfWeekP:: String -> PtOnClen
 
-    reminDParse::Tokens -> Either String (PtOnClock, PtOnClen)
-    reminDParse ts = case stringD "h" ts of
-        Nothing -> Left "reminDParse: Invalid form"
-        Just (fh, lh) -> Right (ptOnClkP fh,dueDParse lh)
-
-    ptOnClkP::String -> PtOnClock
-    ptOnClkP _ = (1,1)
-
-    -- TODO:
-    -- clkPhase:: String -> Maybe PtOnClock 
-        --  "10 am" -> (10,0)
-        --  "1430" -> (14,30)
-
-    -- clenPhase:: String -> Maybe PtOnClen
-        --  "Mon" -> //Monday in current DayOfWeek
-        --  "10 May" -> (10, 5, //Current Year)
-
-    -- !! Will not work as intended.
-    -- nextPtOnClen:: PtOnClen -> PtOnClen
-        --  (24,9,2022) -> (31,9,2022)
-        --  (28,10,2022) -> (4,11,2022)
+    reminDParse::Token -> Either String DnRobj
+    reminDParse ts = case splitTWith 'h' ts of
+        Nothing -> Left "reminDParse: Invalid reminder form"
+        Just (mTime, lh) -> let
+            lhResult = rawDueDParse lh
+            in case lhResult of
+                Left ms -> Left ms
+                Right dd -> if length mTime == 4 
+                    then Right $ Right (mTime, dd)
+                    else Left $ "reminDParse: input invalid militime form: " ++ mTime
