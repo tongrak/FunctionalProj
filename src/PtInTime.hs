@@ -1,39 +1,41 @@
 module PtInTime (
-    dNrParse
+    dORrParse, dueDParse, reminDParse
 ) where
 
     import Tokenizer
     import TaskModel
     import AuxFunc
 
-    dNrParse::Tokens -> Either String DnRobj
-    dNrParse [] = Left "dNrParse: Empty Tokens"
-    dNrParse (x:xs)
-        | x == "BY" = dueDParse $ tokensToStr xs
-        | x == "REMIND" = reminDParse $ tokensToStr xs
+    dORrParse::Tokens -> Either String DnRobj
+    dORrParse [] = Left "dNrParse: Empty Tokens"
+    dORrParse (x:xs)
+        | x == "BY" = ddParCon . dueDParse $ tokensToStr xs
+        | x == "REMIND" = rmParCon . reminDParse $ tokensToStr xs
         | otherwise = Left "Unknown Point In Time"
 
-    dueDParse::Token -> Either String DnRobj
-    dueDParse ts = case rawDueDParse ts of
-        Left ms -> Left ms
+    ddParCon::Either String DueDate -> Either String DnRobj
+    ddParCon x = case x of
+        Left ms  -> Left ms
         Right dd -> Right $ Left dd
 
-    rawDueDParse::Token -> Either String DueDate
-    rawDueDParse [] = Left "dueDParse: Empty Tokens"
-    rawDueDParse ts = case splitTWith ':' ts of
+    rmParCon::Either String Reminder -> Either String DnRobj
+    rmParCon x = case x of
+        Left ms  -> Left ms
+        Right rm -> Right $ Right rm
+
+
+    dueDParse::Token -> Either String DueDate
+    dueDParse [] = Left "dueDParse: Empty Tokens"
+    dueDParse ts = case splitTWith ':' ts of
         Nothing -> Left "dueDParse: DayOfWeek out of order"
-        Just (f,t) -> Right (f,filter aux  t)
-        where aux c = c /= ';' && c /= ' '
+        Just pa -> createDuedate pa
 
-    -- dayOfWeekP:: String -> PtOnClen
+    -- dayOfWeekP:: String -> DueDate
 
-    reminDParse::Token -> Either String DnRobj
+    reminDParse::Token -> Either String Reminder
     reminDParse ts = case splitTWith 'h' ts of
-        Nothing -> Left "reminDParse: Invalid reminder form"
-        Just (mTime, lh) -> let
-            lhResult = rawDueDParse lh
-            in case lhResult of
+        Nothing -> Left "rawReminDParse: Invalid reminder form"
+        Just (fh, lh) -> 
+            case dueDParse lh of
                 Left ms -> Left ms
-                Right dd -> if length mTime == 4 
-                    then Right $ Right (mTime, dd)
-                    else Left $ "reminDParse: input invalid militime form: " ++ mTime
+                Right dd ->createReminder fh dd 
