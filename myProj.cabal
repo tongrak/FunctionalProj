@@ -27,7 +27,7 @@ library
   exposed-modules:
       AuxFunc
       CommEnforcer
-      CommPhaser
+      CommParser
       PtInTime
       StrLog
       TaskModel

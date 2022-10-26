@@ -28,39 +28,31 @@ module CommParser (
     createCommParse:: Tokens -> Either String Comm
     createCommParse ts = 
         case (splitTsSemi ts) of
-        Nothing -> Right ( Add( CrComm (descToTask (tokensToStr ts))))
+        Nothing -> Right ( Add( CrComm (createMinTask (tokensToStr ts))))
         Just (desTs, dNr) -> either 
             (\x -> Left x :: Either String Comm) 
             (\x -> Right (cCPAux (tokensToStr desTs) x)) 
             (dueNReParse dNr)
     
-    cCPAux::String -> Either DnRobj (DnRobj,DnRobj) -> Comm
+    cCPAux::String -> Either DnRobj (DueDate,Reminder) -> Comm
     cCPAux des bck = let
         task = case bck of
-            Left o1 -> taskfrom1Dnr des o1
-            Right (o1,o2) -> taskfrom2Dnr des o1 o2
+            Left o1 -> aux o1 
+            Right (dd,rm) -> createDnRTask des dd rm
         in Add ( CrComm (task))
+        where aux dNr = case dNr of
+                Left dd  -> createDueTask des dd
+                Right rm -> createReminTask des rm
 
-    dueNReParse:: Tokens -> Either String (Either DnRobj (DnRobj,DnRobj))
+    dueNReParse:: Tokens -> Either String (Either DnRobj (DueDate,Reminder))
     dueNReParse ts = case (splitTsSemi ts) of
-        Nothing -> dNrPCase ts
-        Just p -> case biDnRCase p of
+        Nothing -> case dORrParse ts of
             Left ms -> Left ms
-            Right pairDnR -> Right (Right pairDnR)
-                    
-    dNrPCase::Tokens -> Either String (Either DnRobj (DnRobj,DnRobj))
-    dNrPCase ts = case dNrParse ts of
-                    Left ms -> Left ms
-                    Right dr -> Right (Left dr)
-
-    biDnRCase::(Tokens, Tokens) -> Either String (DnRobj,DnRobj)
-    biDnRCase (lTs, rTs) = let
-        lDnR = dNrParse lTs
-        rDnR = dNrParse rTs
-        in case (lDnR, rDnR) of
-                    (Left mss, _) -> Left mss
-                    (_, Left msx) -> Left msx
-                    (Right a, Right b) -> Right(a, b)
+            Right dNr -> Right $ Left $ dNr
+        Just (d, r) -> case (dueDParse . tokensToStr $ d, reminDParse . tokensToStr $ r) of
+            (Left ms, _) -> Left ms
+            (_, Left ms) -> Left ms
+            (Right dd, Right rm) -> Right $ Right (dd,rm)
 
     editCommParse:: Tokens -> Either String Comm
     editCommParse _ = Left "Out of order"
