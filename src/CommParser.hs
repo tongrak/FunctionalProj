@@ -1,5 +1,5 @@
-module CommPhaser (
-    commParse, Comm, ManComm, QueComm
+module CommParser (
+    commParse, Comm, AddComm, ManComm, QueComm
 ) where
 
     import Tokenizer
@@ -7,9 +7,11 @@ module CommPhaser (
     import AuxFunc
     import PtInTime
 
-    data Comm = Manipulate ManComm | Query QueComm | NonComm
+    data Comm = Add AddComm | Manipulate ManComm | Query QueComm | NonComm
         deriving (Show)
-    data ManComm = CrComm Task | EdComm ParTask ParTask | DelComm ParTask
+    data AddComm =  CrComm Task
+        deriving (Show)
+    data ManComm =  EdComm ParTask ParTask | DelComm ParTask
         deriving (Show)
     data QueComm = ShComm ParTask 
         deriving (Show)
@@ -26,7 +28,7 @@ module CommPhaser (
     createCommParse:: Tokens -> Either String Comm
     createCommParse ts = 
         case (splitTsSemi ts) of
-        Nothing -> Right ( Manipulate( CrComm (descToTask (tokensToStr ts))))
+        Nothing -> Right ( Add( CrComm (descToTask (tokensToStr ts))))
         Just (desTs, dNr) -> either 
             (\x -> Left x :: Either String Comm) 
             (\x -> Right (cCPAux (tokensToStr desTs) x)) 
@@ -37,7 +39,7 @@ module CommPhaser (
         task = case bck of
             Left o1 -> taskfrom1Dnr des o1
             Right (o1,o2) -> taskfrom2Dnr des o1 o2
-        in Manipulate( CrComm (task))
+        in Add ( CrComm (task))
 
     dueNReParse:: Tokens -> Either String (Either DnRobj (DnRobj,DnRobj))
     dueNReParse ts = case (splitTsSemi ts) of
@@ -68,6 +70,3 @@ module CommPhaser (
 
     showCommParse:: Tokens -> Either String Comm
     showCommParse _ = Left "Out of order"
-
-
-    
