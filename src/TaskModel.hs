@@ -1,37 +1,77 @@
 module TaskModel(
-    Task, ParTask, DnRobj, DueDate, Reminder, descToTask, taskfrom1Dnr, taskfrom2Dnr
+    Task, ParTask, DueDate, Reminder, MarkStatue,
+    createDuedate, createReminder,
+    createMinTask, createDueTask, createReminTask, createDnRTask
 ) where
 
-    type Date = String
-    type Month = String
+    -- text
+    import Data.Text (Text, pack)
+    import AuxFunc (strToNum)
+
+    type Date = Int
+    type Month = Int
     type MiliTime = String
 
-    type Reminder = (MiliTime, DueDate)
-    type DueDate = (Date, Month)
-    type Desc = String
-    type Marked = Bool
-
-    type DnRobj = Either DueDate Reminder
+    data MarkStatue = Done | NotDone
+        deriving (Show)
+    data DueDate = Due (Date, Month) | NoDue
+        deriving (Show)
+    data Reminder = RemindOn (MiliTime, DueDate) | NoRemind
+        deriving (Show)
 
     data Task =  Task 
-        {   mark::Bool,
-            desc::String,
-            fstDnR::Maybe DnRobj,
-            sndDnR::Maybe DnRobj
+        {   mark::MarkStatue,
+            desc::Text,
+            dueDate::DueDate,
+            reminder::Reminder
         } deriving (Show)
     
-    data ParTask = ParTaskCon 
-        {   pMark::Maybe Bool,
-            pDesc::Maybe String,
-            pFstDnR::Maybe DnRobj,
-            pSndDnR::Maybe DnRobj
+    data ParTask = ParTask 
+        {   pMark::MarkStatue, --Default as NotDone
+            pDesc::Maybe Text,
+            pFstDnR::Maybe DueDate,
+            pSndDnR::Maybe Reminder
         } deriving (Show)
 
-    descToTask::String -> Task
-    descToTask str = Task False str Nothing Nothing
+    isValidDate::Int -> Bool
+    isValidDate x = x > 0 && x < 32
 
-    taskfrom1Dnr::String -> DnRobj -> Task
-    taskfrom1Dnr str dnr = Task False str (Just dnr) Nothing
+    isValidMonth::Int -> Bool
+    isValidMonth x = x > 0 && x < 13
 
-    taskfrom2Dnr::String -> DnRobj -> DnRobj -> Task
-    taskfrom2Dnr str dnr1 dnr2 = Task False str (Just dnr1) (Just dnr2)
+    isValidHour::Int -> Bool
+    isValidHour x = x > 0 && x < 25
+
+    isValidMinu::Int -> Bool
+    isValidMinu x = x > 0 && x < 60
+
+    createDuedate::Int -> Int -> Maybe DueDate
+    createDuedate d m = if isValidDate d && isValidMonth m
+        then Just $ Due (d, m)
+        else Nothing
+
+    isValidMili::String -> Bool
+    isValidMili str = if length str == 4
+        then aux . (\(x,y)->(strToNum x, strToNum y)) . splitAt 2 $ str
+        else False
+        where aux p = case p of
+                (Nothing, _) -> False
+                (_, Nothing) -> False
+                (Just a, Just b) -> isValidHour a && isValidMinu b
+
+    createReminder::String -> DueDate -> Maybe Reminder
+    createReminder rm dd = if isValidMili rm
+            then Just $ RemindOn (rm, dd)
+            else Nothing
+
+    createMinTask::String -> Task
+    createMinTask str = createDnRTask str NoDue NoRemind
+
+    createDueTask::String -> DueDate -> Task
+    createDueTask str dd = createDnRTask str dd NoRemind
+
+    createReminTask::String -> Reminder -> Task
+    createReminTask str rm = createDnRTask str NoDue rm
+
+    createDnRTask::String -> DueDate -> Reminder -> Task
+    createDnRTask str dd rm = Task NotDone (pack str) dd rm
