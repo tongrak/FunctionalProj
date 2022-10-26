@@ -2,7 +2,7 @@ module Main (main) where
 
 -- import Lib
 import Tokenizer
-import CommPhaser
+import CommParser
 
 main :: IO ()
 main = do oneCommRunner

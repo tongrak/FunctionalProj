@@ -1,5 +1,5 @@
 module PtInTime (
-    dORrParse, dueDParse, reminDParse
+    dORrParse, ddParse, rmParse
 ) where
 
     import Tokenizer
@@ -7,11 +7,24 @@ module PtInTime (
     import AuxFunc
 
     dORrParse::Tokens -> Either String DnRobj
-    dORrParse [] = Left "dNrParse: Empty Tokens"
+    dORrParse [] = Left "dORrParse: Empty Tokens"
     dORrParse (x:xs)
         | x == "BY" = ddParCon . dueDParse $ tokensToStr xs
         | x == "REMIND" = rmParCon . reminDParse $ tokensToStr xs
-        | otherwise = Left "Unknown Point In Time"
+        | otherwise = Left $ "dORrParse: Invalid header" ++ x
+
+    ddParse::Tokens -> Either String DueDate
+    ddParse [] = Left "DdParse: Empty Tokens"
+    ddParse (x:xs)
+        | x == "BY" = dueDParse . tokensToStr $ xs
+        | otherwise = Left $ "ddParse: Invalid header" ++ x
+
+    rmParse::Tokens -> Either String Reminder
+    rmParse [] = Left "rmParse: Empty Tokens"
+    rmParse (x:xs)
+        | x == "REMIND" = reminDParse . tokensToStr $ xs
+        | otherwise = Left $ "rmParse: Invalid header" ++ x
+
 
     ddParCon::Either String DueDate -> Either String DnRobj
     ddParCon x = case x of
@@ -22,7 +35,6 @@ module PtInTime (
     rmParCon x = case x of
         Left ms  -> Left ms
         Right rm -> Right $ Right rm
-
 
     dueDParse::Token -> Either String DueDate
     dueDParse [] = Left "dueDParse: Empty Tokens"

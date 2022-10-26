@@ -49,7 +49,7 @@ module CommParser (
         Nothing -> case dORrParse ts of
             Left ms -> Left ms
             Right dNr -> Right $ Left $ dNr
-        Just (d, r) -> case (dueDParse . tokensToStr $ d, reminDParse . tokensToStr $ r) of
+        Just (d, r) -> case (ddParse d, rmParse r) of
             (Left ms, _) -> Left ms
             (_, Left ms) -> Left ms
             (Right dd, Right rm) -> Right $ Right (dd,rm)

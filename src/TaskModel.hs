@@ -43,10 +43,10 @@ module TaskModel(
     isValidMonth x = x > 0 && x < 13
 
     isValidHour::Int -> Bool
-    isValidHour x = x > 0 && x < 25
+    isValidHour x = x >= 0 && x < 25
 
     isValidMinu::Int -> Bool
-    isValidMinu x = x > 0 && x < 60
+    isValidMinu x = x >= 0 && x < 60
 
     createDuedate::(String, String) -> Either String DueDate
     createDuedate p = case  (\(a,b)->(strToNum a, strToNum b)) p of
