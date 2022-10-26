@@ -1,5 +1,6 @@
 module TaskModel(
-    Task, ParTask, DueDate, Reminder, MarkStatue,
+    Task, ParTask, DueDate, Reminder, DnRobj, MarkStatue,
+    isValidMili,
     createDuedate, createReminder,
     createMinTask, createDueTask, createReminTask, createDnRTask
 ) where
@@ -11,6 +12,8 @@ module TaskModel(
     type Date = Int
     type Month = Int
     type MiliTime = String
+    
+    type DnRobj = Either DueDate Reminder
 
     data MarkStatue = Done | NotDone
         deriving (Show)
@@ -45,10 +48,14 @@ module TaskModel(
     isValidMinu::Int -> Bool
     isValidMinu x = x > 0 && x < 60
 
-    createDuedate::Int -> Int -> Maybe DueDate
-    createDuedate d m = if isValidDate d && isValidMonth m
-        then Just $ Due (d, m)
-        else Nothing
+    createDuedate::(String, String) -> Either String DueDate
+    createDuedate p = case  (\(a,b)->(strToNum a, strToNum b)) p of
+        (Nothing, _)     -> Left "Invalid Date form"
+        (_, Nothing)     -> Left "Invalid Month form"
+        (Just d, Just m) -> aux d m
+        where aux d m = if isValidDate d && isValidMonth m
+                then Right $ Due (d, m)
+                else Left "Invalid date or month"
 
     isValidMili::String -> Bool
     isValidMili str = if length str == 4
@@ -59,10 +66,10 @@ module TaskModel(
                 (_, Nothing) -> False
                 (Just a, Just b) -> isValidHour a && isValidMinu b
 
-    createReminder::String -> DueDate -> Maybe Reminder
+    createReminder::String -> DueDate -> Either String Reminder
     createReminder rm dd = if isValidMili rm
-            then Just $ RemindOn (rm, dd)
-            else Nothing
+            then Right $ RemindOn (rm, dd)
+            else Left "Invalid Militime form"
 
     createMinTask::String -> Task
     createMinTask str = createDnRTask str NoDue NoRemind
