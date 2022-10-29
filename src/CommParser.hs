@@ -14,14 +14,16 @@ module CommParser (
         deriving (Show)
     data ManComm =  EdComm ParTask ParTask | DelComm ParTask
         deriving (Show)
-    data QueComm = ShComm ParTask 
+    data QueComm = ShComm ParTask | ShowAll
         deriving (Show)
 
     actOnComm::Comm-> IO (Either String ())
     actOnComm comm = case comm of
       Add (CrComm task) -> actOnCrComm task
       Manipulate _ -> return $ Left "Manipulate Comm: Out of order"
-      Query _ -> return $ Left "Query Comm: Out of order"
+      Query qcc -> case qcc of
+        ShComm _ -> return $ Left "Out of order"
+        ShowAll -> actOnShowAll
       NonComm -> return $ Left "can't act apon non-command"
 
     commParse:: Tokens -> Either String Comm
@@ -36,7 +38,7 @@ module CommParser (
     createCommParse:: Tokens -> Either String Comm
     createCommParse ts = 
         case (splitTsSemi ts) of
-        Nothing -> Right ( Add( CrComm (createMinTask (tokensToStr ts))))
+        Nothing -> Right . Add . CrComm . createMinTask . tokensToStr $ ts
         Just (desTs, dNr) -> either 
             (\x -> Left x :: Either String Comm) 
             (\x -> Right (cCPAux (tokensToStr desTs) x)) 
@@ -54,9 +56,7 @@ module CommParser (
 
     dueNReParse:: Tokens -> Either String (Either DnRobj (DueDate,Reminder))
     dueNReParse ts = case (splitTsSemi ts) of
-        Nothing -> case dORrParse ts of
-            Left ms -> Left ms
-            Right dNr -> Right $ Left $ dNr
+        Nothing -> either (\x->Left x) (\x-> Right .Left$ x) (dORrParse ts)
         Just (d, r) -> case (ddParse d, rmParse r) of
             (Left ms, _) -> Left ms
             (_, Left ms) -> Left ms
@@ -69,4 +69,5 @@ module CommParser (
     delCommParse _ = Left "Out of order"
 
     showCommParse:: Tokens -> Either String Comm
-    showCommParse _ = Left "Out of order"
+    showCommParse [] = Right . Query $ ShowAll
+    showCommParse  _ = Left "Out of order"

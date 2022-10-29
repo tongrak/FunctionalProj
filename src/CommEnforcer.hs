@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 module CommEnforcer (
-  actOnCrComm
+  actOnCrComm, actOnShowAll
 ) where
   -- Vector
   import Data.Vector (Vector, fromList)
@@ -19,7 +19,7 @@ module CommEnforcer (
   import qualified Control.Exception as Exception
   import qualified Data.Foldable as Foldable
   -- local
-  import TaskModel(Task)
+  import TaskModel(Task, taskHeader)
 
   filePath = "csv/tasks.csv"
 
@@ -49,3 +49,21 @@ module CommEnforcer (
       Right tasks -> let
         lts =  toList tasks
         in encodeTaskToFile . fromList $ lts ++ [tt] 
+
+  showAllAug:: Int -> [Task] -> IO()
+  showAllAug _ [] = return ()
+  showAllAug count (x:xs) = do
+    putStr "No."
+    putStr . show $ count
+    print x
+    showAllAug (count+1) xs
+
+  actOnShowAll::IO (Either String ())
+  actOnShowAll = do
+    res <- decodeTasksFromFile
+    case res of
+      Left ms -> return . Left $ ms 
+      Right tasks -> do
+        print taskHeader
+        showAllAug 1 . toList $ tasks
+        return . Right $ ()

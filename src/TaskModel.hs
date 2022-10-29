@@ -56,7 +56,7 @@ module TaskModel(
         show NoDue = "NoDue"
     
     instance Show Reminder where
-        show (RemindOn rm) = (show.fst$rm) ++ "h" ++ (show.snd$rm)
+        show (RemindOn rm) = (fst rm) ++ "h" ++ (show.snd$rm)
         show NoRemind = "NoRemind"
 
     data Task =  Task 
@@ -64,7 +64,12 @@ module TaskModel(
             desc::Text,
             dueDate::DueDate,
             reminder::Reminder
-        } deriving (Eq, Show)
+        } deriving (Eq)
+
+    instance Show Task where
+        show task = "Task: Mark:" ++ (show .mark$ task) 
+            ++ ", Des:" ++ (show .desc$task) ++ ", DueDate:" 
+            ++ (show .dueDate$task) ++ ", Remind:" ++ (show .reminder$task)
     
     data ParTask = ParTask 
         {   pMark::MarkStatue, --Default as NotDone
