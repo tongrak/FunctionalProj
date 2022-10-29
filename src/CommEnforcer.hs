@@ -45,7 +45,7 @@ module CommEnforcer (
   actOnCrComm tt = do 
     res <- decodeTasksFromFile
     case res of
-      Left ms -> return $ Left ms
+      Left _ -> encodeTaskToFile . fromList $ [tt] 
       Right tasks -> let
         lts =  toList tasks
         in encodeTaskToFile . fromList $ lts ++ [tt] 

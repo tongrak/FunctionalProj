@@ -146,11 +146,11 @@ module TaskModel(
 
     instance FromField DueDate where
         parseField "NoDue" = return NoDue
-        parseField dd = parseField  dd >>= return . unpackDDstr
+        parseField dd = parseField  dd >>= return . unpackDDstr . (filter (/= '"'))
     
     instance FromField Reminder where
         parseField "NoRemind" = return NoRemind
-        parseField rm = parseField  rm >>= return . unpackRMstr
+        parseField rm = parseField  rm >>= return . unpackRMstr . (filter (/= '"'))
 
     instance ToNamedRecord Task where
         toNamedRecord Task{..} = Cassava.namedRecord
@@ -165,9 +165,9 @@ module TaskModel(
         toField NotDone = "NotDone"
 
     instance ToField DueDate where
-        toField (Due dd) = packChars.show $ dd
+        toField dd@(Due _) = packChars.show $ dd
         toField NoDue = "NoDue"
 
     instance ToField Reminder where
-        toField (RemindOn rm) = packChars.show $ rm
+        toField rm@(RemindOn _) = packChars.show $ rm
         toField NoRemind = "NoRemind"
