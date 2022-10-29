@@ -47,12 +47,9 @@ module CommParser (
     cCPAux::String -> Either DnRobj (DueDate,Reminder) -> Comm
     cCPAux des bck = let
         task = case bck of
-            Left o1 -> aux o1 
+            Left o1 -> either (createDueTask des) (createReminTask des) o1
             Right (dd,rm) -> createDnRTask des dd rm
         in Add ( CrComm (task))
-        where aux dNr = case dNr of
-                Left dd  -> createDueTask des dd
-                Right rm -> createReminTask des rm
 
     dueNReParse:: Tokens -> Either String (Either DnRobj (DueDate,Reminder))
     dueNReParse ts = case (splitTsSemi ts) of
@@ -70,4 +67,35 @@ module CommParser (
 
     showCommParse:: Tokens -> Either String Comm
     showCommParse [] = Right . Query $ ShowAll
-    showCommParse  _ = Left "Out of order"
+    showCommParse ts = either (\x->Left x)
+        (Right . Query . ShComm)$ aParse ts
+
+    aParse:: Tokens -> Either String ParTask
+    aParse ts = let emp = getEmPTask
+        in loopA emp ts
+
+    loopA::ParTask-> Tokens -> Either String ParTask
+    loopA pt ts =  case splitTsSemi ts of
+        Nothing-> passToB
+        Just (curr, lef)->either (\x->Left x) (\x->loopA x lef)$ passToB
+        where passToB = bParse pt ts
+
+    bParse::ParTask-> Tokens-> Either String ParTask
+    bParse _  [] = Left "bParse: Tokens are empty"
+    bParse pt (x:xs)
+        | x == "MARK:Done" = Right $ changePTFrag (pt) (getPMark) (setPMark) (Just getDone)
+        | x == "MARK:NotDone" = Right $ changePTFrag (pt) (getPMark) (setPMark) (Just getNotDone)
+        | otherwise = Left $ "Invalid partial task header" ++ x
+
+    isNothing:: Maybe a -> Bool
+    isNothing x = case x of
+        Nothing -> True
+        Just _  -> False
+
+    changePTFrag::ParTask -> 
+        (ParTask -> Maybe a) -> 
+        (ParTask -> Maybe a -> ParTask) -> Maybe a -> ParTask
+    changePTFrag pt getF setF toO = case getF pt of
+        Nothing -> setF pt toO
+        Just _ -> pt
+    

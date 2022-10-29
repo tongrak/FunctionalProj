@@ -2,10 +2,13 @@
 {-# LANGUAGE RecordWildCards #-}
 module TaskModel(
     Task, ParTask, DueDate, Reminder, DnRobj, MarkStatue,
-    isValidMili,
+    isValidMili, getDone, getNotDone,
     createDuedate, createReminder,
     createMinTask, createDueTask, createReminTask, createDnRTask,
-    taskHeader
+    taskHeader, 
+    getPMark, getPDesc, getPDD, getPRe,
+    setPMark, setPDesc, setPDD, setPRe,
+    getEmPTask
 ) where
 
     -- text
@@ -51,6 +54,11 @@ module TaskModel(
     data Reminder = RemindOn (MiliTime, DueDate) | NoRemind
         deriving (Eq)
 
+    getDone:: MarkStatue
+    getDone = Done
+    getNotDone:: MarkStatue
+    getNotDone = NotDone
+
     instance Show DueDate where
         show (Due dd) = (show.fst$dd) ++ ":" ++ (show.snd$dd)
         show NoDue = "NoDue"
@@ -72,21 +80,38 @@ module TaskModel(
             ++ (show .dueDate$task) ++ ", Remind:" ++ (show .reminder$task)
     
     data ParTask = ParTask 
-        {   pMark::MarkStatue, --Default as NotDone
+        {   pMark::Maybe MarkStatue, --Default as NotDone
             pDesc::Maybe Text,
-            pFstDnR::Maybe DueDate,
-            pSndDnR::Maybe Reminder
+            pDueDate::Maybe DueDate,
+            pRemind::Maybe Reminder
         } deriving (Eq, Show)
+
+    getEmPTask::ParTask
+    getEmPTask = ParTask Nothing Nothing Nothing Nothing
+
+    getPMark::ParTask->Maybe MarkStatue
+    getPMark = pMark
+    setPMark::ParTask->Maybe MarkStatue->ParTask
+    setPMark pt mar = pt {pMark = mar}
+    getPDesc::ParTask->Maybe Text
+    getPDesc = pDesc
+    setPDesc::ParTask->Maybe Text->ParTask
+    setPDesc pt t = pt {pDesc = t}
+    getPDD::ParTask->Maybe DueDate
+    getPDD = pDueDate
+    setPDD::ParTask->Maybe DueDate->ParTask
+    setPDD pt dd = pt {pDueDate = dd}
+    getPRe::ParTask->Maybe Reminder
+    getPRe = pRemind
+    setPRe::ParTask->Maybe Reminder->ParTask
+    setPRe pt rm = pt {pRemind = rm}
 
     isValidDate::Int -> Bool
     isValidDate x = x > 0 && x < 32
-
     isValidMonth::Int -> Bool
     isValidMonth x = x > 0 && x < 13
-
     isValidHour::Int -> Bool
     isValidHour x = x >= 0 && x < 25
-
     isValidMinu::Int -> Bool
     isValidMinu x = x >= 0 && x < 60
 
