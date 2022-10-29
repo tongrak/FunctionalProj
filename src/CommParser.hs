@@ -1,11 +1,12 @@
 module CommParser (
-    commParse, Comm, AddComm, ManComm, QueComm
+    actOnComm, commParse, Comm, AddComm, ManComm, QueComm
 ) where
 
     import Tokenizer
     import TaskModel
     import AuxFunc
     import PtInTime
+    import CommEnforcer
 
     data Comm = Add AddComm | Manipulate ManComm | Query QueComm | NonComm
         deriving (Show)
@@ -15,6 +16,13 @@ module CommParser (
         deriving (Show)
     data QueComm = ShComm ParTask 
         deriving (Show)
+
+    actOnComm::Comm-> IO (Either String ())
+    actOnComm comm = case comm of
+      Add (CrComm task) -> actOnCrComm task
+      Manipulate _ -> return $ Left "Manipulate Comm: Out of order"
+      Query _ -> return $ Left "Query Comm: Out of order"
+      NonComm -> return $ Left "can't act apon non-command"
 
     commParse:: Tokens -> Either String Comm
     commParse [] = Left "empty tokens"

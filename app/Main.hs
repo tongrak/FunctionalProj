@@ -2,7 +2,7 @@ module Main (main) where
 
 -- import Lib
 import Tokenizer
-import CommParser
+import CommParser (commParse, actOnComm)
 
 main :: IO ()
 main = do oneCommRunner
@@ -25,7 +25,16 @@ oneCommRunner = do
             Right c -> do
                 putStr "Command recived>"
                 print c
-                return ()
+                do 
+                    res <- actOnComm c
+                    case res of
+                        Left ms -> do
+                            putStr "Error Dectected>"
+                            putStrLn ms
+                            return ()
+                        Right () -> do
+                            putStrLn "Command acted"
+                            return ()
 
 printNGet::String -> IO String
 printNGet msg = do
