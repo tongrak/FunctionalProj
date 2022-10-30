@@ -2,10 +2,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 module CommEnforcer (
-  actOnCrComm, actOnShowAll
+  actOnCrComm, actOnShowAll, actOnShow
 ) where
   -- Vector
-  import Data.Vector (Vector, fromList)
+  import Data.Vector (Vector, fromList, filter)
   import qualified Data.Vector as Vector
   -- ByteString
   import Data.ByteString.Lazy (ByteString)
@@ -18,8 +18,10 @@ module CommEnforcer (
   import Control.Exception (IOException)
   import qualified Control.Exception as Exception
   import qualified Data.Foldable as Foldable
+  import Data.Text (Text, pack, unpack, isInfixOf)
+  import Data.String
   -- local
-  import TaskModel(Task, taskHeader)
+  import TaskModel
 
   filePath = "csv/tasks.csv"
 
@@ -49,14 +51,19 @@ module CommEnforcer (
       Right tasks -> let
         lts =  toList tasks
         in encodeTaskToFile . fromList $ lts ++ [tt] 
-
-  showAllAug:: Int -> [Task] -> IO()
-  showAllAug _ [] = return ()
-  showAllAug count (x:xs) = do
-    putStr "No."
-    putStr . show $ count
-    print x
-    showAllAug (count+1) xs
+        
+  showGivenTask::Vector Task -> IO()
+  showGivenTask vT = do
+    print taskHeader
+    aug 1 . toList $ vT
+    where
+      aug:: Int -> [Task] -> IO()
+      aug _ [] = return ()
+      aug count (x:xs) = do
+        putStr "No."
+        putStr . show $ count
+        print x
+        aug (count+1) xs
 
   actOnShowAll::IO (Either String ())
   actOnShowAll = do
@@ -64,6 +71,24 @@ module CommEnforcer (
     case res of
       Left ms -> return . Left $ ms 
       Right tasks -> do
-        print taskHeader
-        showAllAug 1 . toList $ tasks
+        showGivenTask tasks
+        return . Right $ ()
+
+  creaShoCri::Maybe a-> (a->a->Bool)-> (a->Bool)
+  creaShoCri mA toC = case mA of
+    Nothing -> const True
+    Just a -> toC a
+
+  actOnShow::ParTask-> IO (Either String ())
+  actOnShow pt = do
+    let markCri = creaShoCri (getPMark pt) (==)
+    let descCri = creaShoCri (getPDesc pt) (isInfixOf)
+    let ddCri = creaShoCri (getPDD pt) (==)
+    let rmCri = creaShoCri (getPRe pt) (==)
+    res <- decodeTasksFromFile
+    case res of
+      Left ms -> return . Left $ ms 
+      Right tas -> do
+        let remain = Vector.filter(rmCri . getReminder). Vector.filter(ddCri . getDueDate). Vector.filter(descCri . getDesc). Vector.filter(markCri . getMark) $ tas
+        showGivenTask remain
         return . Right $ ()

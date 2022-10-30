@@ -6,6 +6,7 @@ module TaskModel(
     createDuedate, createReminder,
     createMinTask, createDueTask, createReminTask, createDnRTask,
     taskHeader, 
+    getMark, getDesc, getDueDate, getReminder,
     getPMark, getPDesc, getPDD, getPRe,
     setPMark, setPDesc, setPDD, setPRe,
     getEmPTask
@@ -73,6 +74,15 @@ module TaskModel(
             dueDate::DueDate,
             reminder::Reminder
         } deriving (Eq)
+    
+    getMark::Task -> MarkStatue
+    getMark = mark
+    getDesc::Task -> Text
+    getDesc = desc
+    getDueDate::Task -> DueDate
+    getDueDate = dueDate
+    getReminder::Task -> Reminder
+    getReminder = reminder
 
     instance Show Task where
         show task = "Task: Mark:" ++ (show .mark$ task) 

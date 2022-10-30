@@ -2,6 +2,9 @@ module CommParser (
     actOnComm, commParse, Comm, AddComm, ManComm, QueComm
 ) where
 
+    -- Base
+    import Data.Text (pack)
+    -- Local
     import Tokenizer
     import TaskModel
     import AuxFunc
@@ -22,7 +25,7 @@ module CommParser (
       Add (CrComm task) -> actOnCrComm task
       Manipulate _ -> return $ Left "Manipulate Comm: Out of order"
       Query qcc -> case qcc of
-        ShComm _ -> return $ Left "Out of order"
+        ShComm pT -> actOnShow pT
         ShowAll -> actOnShowAll
       NonComm -> return $ Left "can't act apon non-command"
 
@@ -76,21 +79,18 @@ module CommParser (
 
     loopA::ParTask-> Tokens -> Either String ParTask
     loopA pt ts =  case splitTsSemi ts of
-        Nothing-> passToB
-        Just (curr, lef)->either (\x->Left x) (\x->loopA x lef)$ passToB
-        where passToB = bParse pt ts
+        Nothing-> bParse pt ts
+        Just (curr, lef)->either (\x->Left x) (\x->loopA x lef)$ bParse pt curr
 
     bParse::ParTask-> Tokens-> Either String ParTask
     bParse _  [] = Left "bParse: Tokens are empty"
     bParse pt (x:xs)
         | x == "MARK:Done" = Right $ changePTFrag (pt) (getPMark) (setPMark) (Just getDone)
         | x == "MARK:NotDone" = Right $ changePTFrag (pt) (getPMark) (setPMark) (Just getNotDone)
-        | otherwise = Left $ "Invalid partial task header" ++ x
-
-    isNothing:: Maybe a -> Bool
-    isNothing x = case x of
-        Nothing -> True
-        Just _  -> False
+        | x == "NAMED" = Right . changePTFrag (pt) (getPDesc) (setPDesc) . Just . pack $ tokensToStr xs
+        | x == "BY" = fmap (\a -> changePTFrag pt getPDD setPDD $ Just a) $ ddParse (x:xs)
+        | x == "REMIND" = fmap (\a -> changePTFrag pt getPRe setPRe $ Just a) $ rmParse (x:xs)
+        | otherwise = Left $ "Invalid fragment header :" ++ x
 
     changePTFrag::ParTask -> 
         (ParTask -> Maybe a) -> 
