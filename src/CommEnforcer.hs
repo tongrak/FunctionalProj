@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 module CommEnforcer (
-  actOnCrComm, actOnShowAll, actOnShow
+  actOnCrComm, actOnShowAll, actOnShow, actOnDel
 ) where
   -- Vector
   import Data.Vector (Vector, fromList, filter)
@@ -92,3 +92,16 @@ module CommEnforcer (
         let remain = Vector.filter(rmCri . getReminder). Vector.filter(ddCri . getDueDate). Vector.filter(descCri . getDesc). Vector.filter(markCri . getMark) $ tas
         showGivenTask remain
         return . Right $ ()
+
+  actOnDel::ParTask-> IO (Either String ())
+  actOnDel pt = do
+    let markCri = creaShoCri (getPMark pt) (/=)
+    let descCri = creaShoCri (getPDesc pt) (\x y->not$isInfixOf x y)
+    let ddCri = creaShoCri (getPDD pt) (/=)
+    let rmCri = creaShoCri (getPRe pt) (/=)
+    res <- decodeTasksFromFile
+    case res of
+      Left ms -> return . Left $ ms 
+      Right tas -> do
+        let remain = Vector.filter(rmCri . getReminder). Vector.filter(ddCri . getDueDate). Vector.filter(descCri . getDesc). Vector.filter(markCri . getMark) $ tas
+        encodeTaskToFile remain

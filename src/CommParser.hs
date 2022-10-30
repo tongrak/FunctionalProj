@@ -23,7 +23,9 @@ module CommParser (
     actOnComm::Comm-> IO (Either String ())
     actOnComm comm = case comm of
       Add (CrComm task) -> actOnCrComm task
-      Manipulate _ -> return $ Left "Manipulate Comm: Out of order"
+      Manipulate mcc -> case mcc of
+        EdComm _ _ -> return $ Left "Edit Command: Out of Order"
+        DelComm dPT -> actOnDel dPT
       Query qcc -> case qcc of
         ShComm pT -> actOnShow pT
         ShowAll -> actOnShowAll
@@ -34,7 +36,7 @@ module CommParser (
     commParse (x:xs) 
             | x == "CREATE" = createCommParse xs
             | x == "EDIT" = editCommParse xs
-            | x == "DELECTE" = delCommParse xs
+            | x == "DELETE" = delCommParse xs
             | x == "SHOW" = showCommParse xs
             | otherwise = Left "unknown command"
 
@@ -66,7 +68,9 @@ module CommParser (
     editCommParse _ = Left "Out of order"
 
     delCommParse:: Tokens -> Either String Comm
-    delCommParse _ = Left "Out of order"
+    delCommParse [] = Left "DelCommParse: No tasks detail detected"
+    delCommParse ts = either (\x->Left x)
+        (Right . Manipulate . DelComm)$ aParse ts
 
     showCommParse:: Tokens -> Either String Comm
     showCommParse [] = Right . Query $ ShowAll
@@ -83,7 +87,7 @@ module CommParser (
         Just (curr, lef)->either (\x->Left x) (\x->loopA x lef)$ bParse pt curr
 
     bParse::ParTask-> Tokens-> Either String ParTask
-    bParse _  [] = Left "bParse: Tokens are empty"
+    bParse _  [] = Left "bParse: Given tokens are empty"
     bParse pt (x:xs)
         | x == "MARK:Done" = Right $ changePTFrag (pt) (getPMark) (setPMark) (Just getDone)
         | x == "MARK:NotDone" = Right $ changePTFrag (pt) (getPMark) (setPMark) (Just getNotDone)
