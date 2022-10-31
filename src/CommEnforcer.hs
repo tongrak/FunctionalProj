@@ -5,7 +5,7 @@ module CommEnforcer (
   actOnCrComm, actOnShowAll, actOnShow, actOnDel
 ) where
   -- Vector
-  import Data.Vector (Vector, fromList, filter)
+  import Data.Vector (Vector, fromList)
   import qualified Data.Vector as Vector
   -- ByteString
   import Data.ByteString.Lazy (ByteString)
@@ -18,7 +18,7 @@ module CommEnforcer (
   import Control.Exception (IOException)
   import qualified Control.Exception as Exception
   import qualified Data.Foldable as Foldable
-  import Data.Text (Text, pack, unpack, isInfixOf)
+  import Data.Text (pack, unpack, isInfixOf)
   import Data.String
   -- local
   import TaskModel
@@ -74,17 +74,17 @@ module CommEnforcer (
         showGivenTask tasks
         return . Right $ ()
 
-  creaShoCri::Maybe a-> (a->a->Bool)-> (a->Bool)
-  creaShoCri mA toC = case mA of
+  creaCri::Maybe a-> (a->a->Bool)-> (a->Bool)
+  creaCri mA toC = case mA of
     Nothing -> const True
     Just a -> toC a
 
   actOnShow::ParTask-> IO (Either String ())
   actOnShow pt = do
-    let markCri = creaShoCri (getPMark pt) (==)
-    let descCri = creaShoCri (getPDesc pt) (isInfixOf)
-    let ddCri = creaShoCri (getPDD pt) (==)
-    let rmCri = creaShoCri (getPRe pt) (==)
+    let markCri = creaCri (getPMark pt) (==)
+    let descCri = creaCri (getPDesc pt) (isInfixOf)
+    let ddCri = creaCri (getPDD pt) (==)
+    let rmCri = creaCri (getPRe pt) (==)
     res <- decodeTasksFromFile
     case res of
       Left ms -> return . Left $ ms 
@@ -95,10 +95,10 @@ module CommEnforcer (
 
   actOnDel::ParTask-> IO (Either String ())
   actOnDel pt = do
-    let markCri = creaShoCri (getPMark pt) (/=)
-    let descCri = creaShoCri (getPDesc pt) (\x y->not$isInfixOf x y)
-    let ddCri = creaShoCri (getPDD pt) (/=)
-    let rmCri = creaShoCri (getPRe pt) (/=)
+    let markCri = creaCri (getPMark pt) (/=)
+    let descCri = creaCri (getPDesc pt) (\x y->not$isInfixOf x y)
+    let ddCri = creaCri (getPDD pt) (/=)
+    let rmCri = creaCri (getPRe pt) (/=)
     res <- decodeTasksFromFile
     case res of
       Left ms -> return . Left $ ms 

@@ -27,14 +27,10 @@ module PtInTime (
 
 
     ddParCon::Either String DueDate -> Either String DnRobj
-    ddParCon x = case x of
-        Left ms  -> Left ms
-        Right dd -> Right $ Left dd
+    ddParCon x = x >>= (Right . Left)
 
     rmParCon::Either String Reminder -> Either String DnRobj
-    rmParCon x = case x of
-        Left ms  -> Left ms
-        Right rm -> Right $ Right rm
+    rmParCon x = x >>= (Right . Right)
 
     dueDParse::Token -> Either String DueDate
     dueDParse [] = Left "dueDParse: Empty Tokens"

@@ -27,17 +27,14 @@ module TaskModel(
         )
     import qualified Data.Csv as Cassava
     -- bytestring
-    import Data.ByteString.Lazy (ByteString)
-    import Data.ByteString.Internal (packChars, unpackChars)
-    import qualified Data.ByteString.Lazy as ByteString
+    import Data.ByteString.Internal (packChars)
     -- Vector
-    import Data.Vector (Vector)
-    import qualified Data.Vector as Vector
+    import Data.Vector (fromList)
     -- Local
     import AuxFunc (strToNum, splitTWith)
 
     taskHeader:: Header
-    taskHeader = Vector.fromList ["Marked", "Description", "DueDate", "Reminder"]
+    taskHeader = fromList ["Marked", "Description", "DueDate", "Reminder"]
 
     instance DefaultOrdered Task where
         headerOrder _ = Cassava.header ["Marked", "Description", "DueDate", "Reminder"]

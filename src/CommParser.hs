@@ -58,7 +58,7 @@ module CommParser (
 
     dueNReParse:: Tokens -> Either String (Either DnRobj (DueDate,Reminder))
     dueNReParse ts = case (splitTsSemi ts) of
-        Nothing -> either (\x->Left x) (\x-> Right .Left$ x) (dORrParse ts)
+        Nothing -> dORrParse ts >>= (Right .Left)
         Just (d, r) -> case (ddParse d, rmParse r) of
             (Left ms, _) -> Left ms
             (_, Left ms) -> Left ms
@@ -69,29 +69,26 @@ module CommParser (
 
     delCommParse:: Tokens -> Either String Comm
     delCommParse [] = Left "DelCommParse: No tasks detail detected"
-    delCommParse ts = either (\x->Left x)
-        (Right . Manipulate . DelComm)$ aParse ts
+    delCommParse ts = aParse ts >>= (Right . Manipulate . DelComm)
 
     showCommParse:: Tokens -> Either String Comm
     showCommParse [] = Right . Query $ ShowAll
-    showCommParse ts = either (\x->Left x)
-        (Right . Query . ShComm)$ aParse ts
+    showCommParse ts = aParse ts >>= (Right . Query . ShComm)
 
     aParse:: Tokens -> Either String ParTask
-    aParse ts = let emp = getEmPTask
-        in loopA emp ts
+    aParse ts = loopA getEmPTask ts
 
     loopA::ParTask-> Tokens -> Either String ParTask
     loopA pt ts =  case splitTsSemi ts of
         Nothing-> bParse pt ts
-        Just (curr, lef)->either (\x->Left x) (\x->loopA x lef)$ bParse pt curr
+        Just (curr, lef)-> (bParse pt curr) >>= (\x->loopA x lef)
 
     bParse::ParTask-> Tokens-> Either String ParTask
     bParse _  [] = Left "bParse: Given tokens are empty"
     bParse pt (x:xs)
-        | x == "MARK:Done" = Right $ changePTFrag (pt) (getPMark) (setPMark) (Just getDone)
-        | x == "MARK:NotDone" = Right $ changePTFrag (pt) (getPMark) (setPMark) (Just getNotDone)
-        | x == "NAMED" = Right . changePTFrag (pt) (getPDesc) (setPDesc) . Just . pack $ tokensToStr xs
+        | x == "MARK:Done" = Right $ changePTFrag pt getPMark setPMark (Just getDone)
+        | x == "MARK:NotDone" = Right $ changePTFrag pt getPMark setPMark (Just getNotDone)
+        | x == "NAMED" = Right . changePTFrag pt getPDesc setPDesc . Just . pack $ tokensToStr xs
         | x == "BY" = fmap (\a -> changePTFrag pt getPDD setPDD $ Just a) $ ddParse (x:xs)
         | x == "REMIND" = fmap (\a -> changePTFrag pt getPRe setPRe $ Just a) $ rmParse (x:xs)
         | otherwise = Left $ "Invalid fragment header :" ++ x
